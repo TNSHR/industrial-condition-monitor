@@ -1,0 +1,17 @@
+# STM32CubeIDE build output
+Debug/
+Release/
+*.o
+*.elf
+*.map
+*.su
+
+# Node
+node_modules/
+dist/
+.env
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
