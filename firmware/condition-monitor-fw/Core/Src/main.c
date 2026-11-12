@@ -102,6 +102,9 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_HOST_Init();
   /* USER CODE BEGIN 2 */
+  const uint16_t leds[4] = {LD4_Pin, LD3_Pin, LD5_Pin, LD6_Pin};
+  uint32_t lastTick = 0;
+  uint8_t idx = 0;
 
   /* USER CODE END 2 */
 
@@ -112,10 +115,21 @@ int main(void)
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 
-    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);   // green LED (PD12)
-       HAL_Delay(500);
-
     /* USER CODE BEGIN 3 */
+    // Move the light every 200 milliseconds, without freezing the program
+    if (HAL_GetTick() - lastTick >= 200)
+    {
+      lastTick = HAL_GetTick();
+      HAL_GPIO_WritePin(GPIOD, LD4_Pin|LD3_Pin|LD5_Pin|LD6_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOD, leds[idx], GPIO_PIN_SET);
+      idx = (idx + 1) % 4;
+    }
+
+    // While the blue button is pressed, switch all four LEDs on
+    if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET)
+    {
+      HAL_GPIO_WritePin(GPIOD, LD4_Pin|LD3_Pin|LD5_Pin|LD6_Pin, GPIO_PIN_SET);
+    }
   }
   /* USER CODE END 3 */
 }
@@ -324,7 +338,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
