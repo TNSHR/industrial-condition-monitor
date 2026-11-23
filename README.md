@@ -24,3 +24,4 @@ an ESP32 MQTT gateway, a Node.js/TypeScript backend and a React dashboard.
 ## Progress log
 - Day 1: repo created
 - Day 1: repo created, STM32CubeIDE set up, LED blink on PD12 working
+- Day 2: LED chase and user button reading working

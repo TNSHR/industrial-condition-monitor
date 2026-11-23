@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "usb_host.h"
+#include <stdio.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -48,6 +49,9 @@ I2S_HandleTypeDef hi2s3;
 SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN PV */
+volatile uint8_t buttonPressed = 0;
+volatile uint32_t lastPressTime = 0;
+uint32_t pressCount = 0;
 
 /* USER CODE END PV */
 
@@ -126,9 +130,11 @@ int main(void)
     }
 
     // While the blue button is pressed, switch all four LEDs on
-    if (HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) == GPIO_PIN_SET)
+    if (buttonPressed)
     {
-      HAL_GPIO_WritePin(GPIOD, LD4_Pin|LD3_Pin|LD5_Pin|LD6_Pin, GPIO_PIN_SET);
+      buttonPressed = 0;
+      pressCount++;
+      printf("Button pressed %lu times\n", (unsigned long)pressCount);
     }
   }
   /* USER CODE END 3 */
@@ -338,7 +344,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
@@ -377,11 +383,38 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(MEMS_INT2_GPIO_Port, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+// Makes printf() send its text out through the SWO wire (pin PB3)
+int _write(int file, char *ptr, int len)
+{
+  for (int i = 0; i < len; i++)
+  {
+    ITM_SendChar(*ptr++);
+  }
+  return len;
+}
+
+// The chip calls this by itself when the button interrupt happens
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == GPIO_PIN_0)
+  {
+    uint32_t now = HAL_GetTick();
+    if (now - lastPressTime > 50)   // ignore bounce within 50 ms
+    {
+      lastPressTime = now;
+      buttonPressed = 1;            // raise the flag
+    }
+  }
+}
 
 /* USER CODE END 4 */
 
