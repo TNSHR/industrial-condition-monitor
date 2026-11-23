@@ -15,3 +15,7 @@ dist/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# CubeIDE personal settings
+firmware/condition-monitor-fw/.settings/language.settings.xml
+firmware/condition-monitor-fw/.settings/com.st.stm32cube.ide.mcu.sfrview.prefs
